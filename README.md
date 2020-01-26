@@ -18,3 +18,6 @@ Please use Python3 to execute this script, and install the selenium library with
 
 Replace the variables urlOld, urlNew, firstPageNumber and lastPageNumber with the values you want to use.
 You may also use a list of pages to rename (in case the numbers are not consecutive) using line 15 and variable "pages".
+
+# ws-download
+Download books, page by page, from Wikisource, and convert them to XML-TEI
