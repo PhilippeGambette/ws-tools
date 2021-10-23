@@ -89,19 +89,18 @@
 </head>
 
 <body>
-    <h1>Wikisource Geocoder</h1>
+    <h1><img src="ws-geocoder.png" style="height:100px;margin-bottom:-20px;">Wikisource Geocoder</h1>
     <p>
         La bibliothèque numérique en ligne Wikisource permet d'inclure des liens vers Wikipédia en utilisant le modèle
         <a href="https://fr.wikisource.org/wiki/Mod%C3%A8le:Hwp">Hwp</a>.
-        Cette page propose d'extraire diverses informations sur les éléments correspondant à ces liens vers Wikipédia :
+        Cette page propose d'extraire du code HTML d'une page Wikisource diverses informations sur les éléments correspondant à ces liens vers Wikipédia :
         coordonnées géographiques (afin de générer une carte), illustrations (afin de générer une galerie d'images).
         Le code source de cette page est mis à disposition dans le dossier <tt>ws-geocoder</tt> de <a href="https://github.com/PhilippeGambette/ws-tools">ce dépôt GitHub</a>.
     </p>
     <p>
         Merci de coller ci-dessous le code HTML de la page Wikisource que vous souhaitez géocoder (exemple ci-dessous :
         code
-        de <a href="https://fr.wikisource.org/wiki/Vies_des_peintres,_sculpteurs_et_architectes/tome_1_complet">cette
-            page</a> au 23/10/2021). </p>
+        de la version du 23/10/2021 du premier tome de <a href="https://fr.wikisource.org/wiki/Vies_des_peintres,_sculpteurs_et_architectes/tome_1_complet"><i>Vies des peintres, sculpteurs et architectes</i></a> de Giorgio Vasari, traduit par Léopold Leclanché, mis en ligne et enrichi dans le cadre de <a href="https://fr.wikisource.org/wiki/Wikisource:Projet_Lessico_Beni_culturali">ce projet</a>). </p>
     <img src="loading_icon.gif" id="preloader">
     <textarea id="source" class="cache">
             <!DOCTYPE html>
@@ -12162,8 +12161,9 @@
     </div>
     <footer>
         <h2>Crédits</h2>
-        Visuel d'attente : <a href="https://commons.wikimedia.org/wiki/User:Ahm_masum">Ahm masum</a> (<a
-            href="https://commons.wikimedia.org/wiki/File:Loading_icon.gif">Wikimedia Commons</a>, CC BY-SA 4.0)
+        <p>Code de cette page : <a href="http://igm.univ-mlv.fr/~gambette">Philippe Gambette</a></p>
+        <p>Visuel d'attente : <a href="https://commons.wikimedia.org/wiki/User:Ahm_masum">Ahm masum</a> (<a
+            href="https://commons.wikimedia.org/wiki/File:Loading_icon.gif">Wikimedia Commons</a>, CC BY-SA 4.0)</p>
     </footer>
 </body>
 <script>
