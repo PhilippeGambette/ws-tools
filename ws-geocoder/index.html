@@ -5,7 +5,16 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=800, initial-scale=1.0">
-    <title>Document</title>
+    <title>Wikisource Geocoder</title>
+    <link rel="icon" type="image/png" href="ws-geocoder.png" />
+    <!-- Leaflet import start here -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <!-- Leaflet import end here -->
     <style>
         body {
             font-family: 'Calibri', "Gill Sans", sans-serif;
@@ -25,11 +34,20 @@
             display: none;
         }
 
+        .leaflet-popup-content img {
+            height: 200px;
+        }
+
         #galleryDiv img {
             height: 200px;
         }
 
-        a.tooltip img{
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+
+        a.tooltip img {
             height: 200px;
         }
 
@@ -77,6 +95,7 @@
         <a href="https://fr.wikisource.org/wiki/Mod%C3%A8le:Hwp">Hwp</a>.
         Cette page propose d'extraire diverses informations sur les éléments correspondant à ces liens vers Wikipédia :
         coordonnées géographiques (afin de générer une carte), illustrations (afin de générer une galerie d'images).
+        Le code source de cette page est mis à disposition dans le dossier <tt>ws-geocoder</tt> de <a href="https://github.com/PhilippeGambette/ws-tools">ce dépôt GitHub</a>.
     </p>
     <p>
         Merci de coller ci-dessous le code HTML de la page Wikisource que vous souhaitez géocoder (exemple ci-dessous :
@@ -12131,6 +12150,16 @@
     <main>
     </main>
     <div class="cache" id="sourceHtml"></div>
+    <div id="mapDiv" class="cache">
+        <h2>Carte</h2>
+        <div id="map"></div>
+    </div>
+    <div id="galleryDiv" class="cache">
+        <h2>Galerie</h2>
+    </div>
+    <div id="textDiv" class="cache">
+        <h2>Texte</h2>
+    </div>
     <footer>
         <h2>Crédits</h2>
         Visuel d'attente : <a href="https://commons.wikimedia.org/wiki/User:Ahm_masum">Ahm masum</a> (<a
@@ -12138,6 +12167,21 @@
     </footer>
 </body>
 <script>
+
+    //=================================================
+    //Code in the block below from https://stackoverflow.com/questions/45309447/calculating-median-javascript
+    function median(numbers) {
+        const sorted = numbers.slice().sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+
+        if (sorted.length % 2 === 0) {
+            return (sorted[middle - 1] + sorted[middle]) / 2;
+        }
+
+        return sorted[middle];
+    }
+    //=================================================
+
     //=================================================
     //Code in the block below from https://query.wikidata.org/
     class SPARQLQueryDispatcher {
@@ -12206,14 +12250,16 @@
             queryDispatcher.query(sparqlQuery).then(data => {
                 console.log(data.results.bindings);
                 // Map creation
-                document.querySelector("main").appendChild(document.createElement("div"));
-                document.querySelector("main").lastElementChild.setAttribute("id", "mapDiv");
-                document.querySelector("#mapDiv").innerHTML = "<h2>Carte</h2>"
+                document.querySelector("#mapDiv").classList.remove("cache");
+                let markers = [];
+                let latitude = [];
+                let longitude = [];
 
-                // Galery creation
-                document.querySelector("main").appendChild(document.createElement("div"));
-                document.querySelector("main").lastElementChild.setAttribute("id", "galleryDiv");
+                // Gallery creation
+                document.querySelector("#galleryDiv").classList.remove("cache");
                 document.querySelector("#galleryDiv").innerHTML = "<h2>Gallerie</h2>"
+
+                // Get wikidata info corresponding to Wikipedia links
                 data.results.bindings.forEach(result => {
                     // if the wikidata element has a picture, save its infos for later
                     if (result.picture != undefined) {
@@ -12240,21 +12286,30 @@
                             document.querySelector("#galleryDiv").lastElementChild.lastElementChild.setAttribute("alt", result.itemLabel.value);
                         }
                     } else {
+                        // Extract coordinates
+                        console.log(result.coordinates.value);
+                        let coord = /Point\(([0-9]*[.][0-9]*) ([0-9]*[.][0-9]*)\)/i.exec(result.coordinates.value)
+
+                        if ("picture" in result){
+                            markers.push([parseFloat(coord[1]), parseFloat(coord[2]), result.itemLabel.value, result.picture.value]);   
+                        } else {
+                            markers.push([parseFloat(coord[1]), parseFloat(coord[2]), result.itemLabel.value]);    
+                        }
+                        
+                        longitude.push(parseFloat(coord[1]));
+                        latitude.push(parseFloat(coord[2]));
 
                     }
                 })
-                // Fin du traitement des résultats de Wikidata
+                // End of wikidata result processing
+
+                // Add tooltips to the text
                 document.querySelectorAll("a").forEach(e => {
                     let title = e.getAttribute("title");
                     if (title != null && title[1] == ":") {
                         let name = title.substring(2);
                         // Link to a Wikipedia page
                         if (title[0] == "w") {
-
-                            console.log(name)
-                            console.log(wikipedia[name])
-                            console.log("objet avec image")
-                            console.log(wikidata[wikipedia[name].wikidata])
                             if ((name in wikipedia) && (wikipedia[name].wikidata in wikidata)) {
                                 e.setAttribute("class", "tooltip");
                                 e.innerHTML = e.innerHTML + `<em><span></span><b>${name}</b><br><img src="${wikidata[wikipedia[name].wikidata].image}" alt="${name}"></em>`;
@@ -12263,13 +12318,30 @@
                     }
                 });
 
+                //=================================================
+                // Code in the block below from https://leafletjs.com/
+                var map = L.map('map').setView([median(latitude), median(longitude)], 10);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                markers.forEach(m=>{
+                    console.log(m)
+                    let image = "";
+                    if(m.length>3){
+                        image=`<img src="${m[3]}" alt="Image">`;
+                    }
+                L.marker([m[1], m[0]]).addTo(map)
+                    .bindPopup(`<h3>${m[2]}</h3>${image}`);
+                })
+                //=================================================
 
 
-                // Traitement du texte
-                document.querySelector("main").appendChild(document.createElement("div"));
-                document.querySelector("main").lastElementChild.setAttribute("id", "textDiv");
+                // Display the text
+                document.querySelector("#textDiv").classList.remove("cache");
                 let texte = document.querySelector(".prp-pages-output").innerHTML
-                document.querySelector("#source").remove();
+                document.querySelector("#sourceHtml").remove();
                 document.querySelector("#textDiv").innerHTML = "<h2>Texte</h2>" + texte.replace(/"\/wiki/gi, "http://fr.wikisource.org/wiki").replace(/src="\/\/upload.wikimedia.org/gi, 'src="https://upload.wikimedia.org');
 
 
